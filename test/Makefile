@@ -30,6 +30,7 @@ LIBCRYPTO= -L.. -lcrypto
 LIBSSL= -L.. -lssl
 LIBFIPS= -L.. -lfips
 
+AESTEST=	aes_test
 BNTEST=		bntest
 ECTEST=		ectest
 ECDSATEST=	ecdsatest
@@ -90,7 +91,7 @@ HEARTBEATTEST=  heartbeat_test
 
 TESTS=		alltests
 
-EXE=	$(BNTEST)$(EXE_EXT) $(ECTEST)$(EXE_EXT)  $(ECDSATEST)$(EXE_EXT) $(ECDHTEST)$(EXE_EXT) $(IDEATEST)$(EXE_EXT) \
+EXE=	$(AESTEST)$(EXE_EXT) $(BNTEST)$(EXE_EXT) $(ECTEST)$(EXE_EXT)  $(ECDSATEST)$(EXE_EXT) $(ECDHTEST)$(EXE_EXT) $(IDEATEST)$(EXE_EXT) \
 	$(MD2TEST)$(EXE_EXT)  $(MD4TEST)$(EXE_EXT) $(MD5TEST)$(EXE_EXT) $(HMACTEST)$(EXE_EXT) $(WPTEST)$(EXE_EXT) \
 	$(RC2TEST)$(EXE_EXT) $(RC4TEST)$(EXE_EXT) $(RC5TEST)$(EXE_EXT) \
 	$(DESTEST)$(EXE_EXT) $(SHATEST)$(EXE_EXT) $(SHA1TEST)$(EXE_EXT) $(SHA256TEST)$(EXE_EXT) $(SHA512TEST)$(EXE_EXT) \
@@ -114,7 +115,7 @@ FIPSEXE=$(FIPS_SHATEST)$(EXE_EXT) $(FIPS_DESTEST)$(EXE_EXT) \
 
 # $(METHTEST)$(EXE_EXT)
 
-OBJ=	$(BNTEST).o $(ECTEST).o  $(ECDSATEST).o $(ECDHTEST).o $(IDEATEST).o \
+OBJ=	$(AESTEST).o $(BNTEST).o $(ECTEST).o  $(ECDSATEST).o $(ECDHTEST).o $(IDEATEST).o \
 	$(MD2TEST).o $(MD4TEST).o $(MD5TEST).o \
 	$(HMACTEST).o $(WPTEST).o \
 	$(RC2TEST).o $(RC4TEST).o $(RC5TEST).o \
@@ -131,7 +132,7 @@ OBJ=	$(BNTEST).o $(ECTEST).o  $(ECDSATEST).o $(ECDHTEST).o $(IDEATEST).o \
 	$(EVPTEST).o $(IGETEST).o $(JPAKETEST).o $(V3NAMETEST).o \
 	$(GOST2814789TEST).o $(HEARTBEATTEST).o $(P5_CRPT2_TEST).o
 
-SRC=	$(BNTEST).c $(ECTEST).c  $(ECDSATEST).c $(ECDHTEST).c $(IDEATEST).c \
+SRC=	$(AESTEST).c $(BNTEST).c $(ECTEST).c  $(ECDSATEST).c $(ECDHTEST).c $(IDEATEST).c \
 	$(MD2TEST).c  $(MD4TEST).c $(MD5TEST).c \
 	$(HMACTEST).c $(WPTEST).c \
 	$(RC2TEST).c $(RC4TEST).c $(RC5TEST).c \
@@ -185,7 +186,7 @@ apps:
 	@(cd ..; $(MAKE) DIRS=apps all)
 
 alltests: \
-	test_des test_idea test_sha test_md4 test_md5 test_hmac \
+	test_aes test_des test_idea test_sha test_md4 test_md5 test_hmac \
 	test_md2 test_mdc2 test_wp \
 	test_rmd test_rc2 test_rc4 test_rc5 test_bf test_cast \
 	test_rand test_bn test_ec test_ecdsa test_ecdh \
@@ -194,6 +195,9 @@ alltests: \
 	test_ss test_ca test_engine test_evp test_ssl test_tsa test_ige \
 	test_jpake test_srp test_cms test_v3name test_ocsp \
 	test_gost2814789 test_heartbeat test_p5_crpt2
+
+test_aes: $(AESTEST)$(EXE_EXT)
+	../util/shlib_wrap.sh ./$(AESTEST)
 
 test_evp: $(EVPTEST)$(EXE_EXT) evptests.txt
 	../util/shlib_wrap.sh ./$(EVPTEST) evptests.txt
@@ -427,6 +431,9 @@ BUILD_CMD_STATIC=shlib_target=; \
 		LIBDEPS="$(PEX_LIBS) $$LIBRARIES $(EX_LIBS)" \
 		link_app.$${shlib_target}
 
+$(AESTEST)$(EXE_EXT): $(AESTEST).o $(DLIBCRYPTO)
+	@target=$(AESTEST); $(BUILD_CMD)
+
 $(RSATEST)$(EXE_EXT): $(RSATEST).o $(DLIBCRYPTO)
 	@target=$(RSATEST); $(BUILD_CMD)
 
@@ -626,16 +633,6 @@ $(V3NAMETEST)$(EXE_EXT): $(V3NAMETEST).o $(DLIBCRYPTO)
 
 $(HEARTBEATTEST)$(EXE_EXT): $(HEARTBEATTEST).o $(DLIBCRYPTO)
 	@target=$(HEARTBEATTEST); $(BUILD_CMD_STATIC)
-
-#$(AESTEST).o: $(AESTEST).c
-#	$(CC) -c $(CFLAGS) -DINTERMEDIATE_VALUE_KAT -DTRACE_KAT_MCT $(AESTEST).c
-
-#$(AESTEST)$(EXE_EXT): $(AESTEST).o $(DLIBCRYPTO)
-#	if [ "$(SHLIB_TARGET)" = "hpux-shared" -o "$(SHLIB_TARGET)" = "darwin-shared" ] ; then \
-#	  $(CC) -o $(AESTEST)$(EXE_EXT) $(CFLAGS) $(AESTEST).o $(PEX_LIBS) $(DLIBCRYPTO) $(EX_LIBS) ; \
-#	else \
-#	  $(CC) -o $(AESTEST)$(EXE_EXT) $(CFLAGS) $(AESTEST).o $(PEX_LIBS) $(LIBCRYPTO) $(EX_LIBS) ; \
-#	fi
 
 dummytest$(EXE_EXT): dummytest.o $(DLIBCRYPTO)
 	@target=dummytest; $(BUILD_CMD)

@@ -18,8 +18,7 @@ ASFLAGS= $(INCLUDES) $(ASFLAG)
 AFLAGS= $(ASFLAGS)
 
 GENERAL=Makefile
-#TEST=aestest.c
-TEST=
+TEST=aes_test.c
 APPS=
 
 LIB=$(TOP)/libcrypto.a
