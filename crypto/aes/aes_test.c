@@ -224,7 +224,8 @@ int run_tests(struct test *tests,
 			ret = AES_set_encrypt_key(t->kek.val, t->kek.len*8,
 							&kek);
 			assert(ret == 0);
-			ret = wrap_f(&kek, t->iv.val, outbuf, t->ptext.val,
+			memcpy(outbuf, t->ptext.val, t->ptext.len);
+			ret = wrap_f(&kek, t->iv.val, outbuf, outbuf,
 					t->ptext.len);
 			err += compare_results(ret, t->wrap_ret, outbuf,
 						t->ctext.val, t->ctext.len,
@@ -237,7 +238,8 @@ int run_tests(struct test *tests,
 			ret = AES_set_decrypt_key(t->kek.val, t->kek.len*8,
 							&kek);
 			assert(ret == 0);
-			ret = unwrap_f(&kek, t->iv.val, outbuf, t->ctext.val,
+			memcpy(outbuf, t->ctext.val, t->ctext.len);
+			ret = unwrap_f(&kek, t->iv.val, outbuf, outbuf,
 					t->ctext.len);
 			err += compare_results(ret, t->unwrap_ret, outbuf,
 						t->ptext.val, t->ptext.len,
