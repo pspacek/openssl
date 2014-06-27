@@ -82,11 +82,11 @@ static const unsigned char default_aiv[] = {
 /** Wrapping according to RFC 3394 section 2.2.1.
  *
  *  @param[in]  iv  IV value. Length = 8 bytes. NULL = use default_iv.
- *  @param[in]  in  Plain text as n 64-bit blocks.
+ *  @param[in]  in  Plain text as n 64-bit blocks, n >= 2.
  *  @param[out] out Cipher text. Minimal buffer length = (inlen + 8) bytes.
  *                  Input and output buffers can overlap if block function
  *                  supports that.
- *  @return         0 if inlen does not consist of n 64-bit blocks, n > 0
+ *  @return         0 if inlen does not consist of n 64-bit blocks, n >= 2.
  *                  or if inlen > CRYPTO128_WRAP_MAX.
  *                  Output length if wrapping succeeded.
  */
@@ -96,7 +96,7 @@ size_t CRYPTO_128_wrap(void *key, const unsigned char *iv,
 	{
 	unsigned char *A, B[16], *R;
 	size_t i, j, t;
-	if ((inlen & 0x7) || (inlen < 8) || (inlen > CRYPTO128_WRAP_MAX))
+	if ((inlen & 0x7) || (inlen < 16) || (inlen > CRYPTO128_WRAP_MAX))
 		return 0;
 	A = B;
 	t = 1;
@@ -136,7 +136,7 @@ size_t CRYPTO_128_wrap(void *key, const unsigned char *iv,
  *                  Minimal buffer length = (inlen - 8) bytes.
  *                  Input and output buffers can overlap if block function
  *                  supports that.
- *  @return         0 if inlen is out of range [16, CRYPTO128_WRAP_MAX]
+ *  @return         0 if inlen is out of range [24, CRYPTO128_WRAP_MAX]
  *                  or if inlen is not multiply of 8.
  *                  Output length otherwise.
  */
@@ -147,7 +147,7 @@ static size_t _CRYPTO_128_unwrap_raw(void *key, unsigned char *iv,
 	unsigned char *A, B[16], *R;
 	size_t i, j, t;
 	inlen -= 8;
-	if ((inlen & 0x7) || (inlen < 8) || (inlen > CRYPTO128_WRAP_MAX))
+	if ((inlen & 0x7) || (inlen < 16) || (inlen > CRYPTO128_WRAP_MAX))
 		return 0;
 	A = B;
 	t =  6 * (inlen >> 3);
@@ -183,7 +183,7 @@ static size_t _CRYPTO_128_unwrap_raw(void *key, unsigned char *iv,
  *                  Minimal buffer length = (inlen - 8) bytes.
  *                  Input and output buffers can overlap if block function
  *                  supports that.
- *  @return         0 if inlen is out of range [16, CRYPTO128_WRAP_MAX]
+ *  @return         0 if inlen is out of range [24, CRYPTO128_WRAP_MAX]
  *                  or if inlen is not multiply of 8
  *                  or if IV doesn't match expected value.
  *                  Output length if unwrapping succeeded and IV matches.
