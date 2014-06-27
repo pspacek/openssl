@@ -135,7 +135,12 @@ int AES_wrap_key(AES_KEY *key, const unsigned char *iv,
 int AES_unwrap_key(AES_KEY *key, const unsigned char *iv,
 		unsigned char *out,
 		const unsigned char *in, unsigned int inlen);
-
+int AES_wrap_key_withpad(AES_KEY *key, const unsigned char *icv,
+		unsigned char *out,
+		const unsigned char *in, unsigned int inlen);
+int AES_unwrap_key_withpad(AES_KEY *key, const unsigned char *icv,
+		unsigned char *out,
+		const unsigned char *in, unsigned int inlen);
 
 #ifdef  __cplusplus
 }

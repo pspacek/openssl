@@ -68,3 +68,17 @@ int AES_unwrap_key(AES_KEY *key, const unsigned char *iv,
 	{
 	return CRYPTO_128_unwrap(key, iv, out, in, inlen, (block128_f)AES_decrypt);
 	}
+
+int AES_wrap_key_withpad(AES_KEY *key, const unsigned char *icv,
+		unsigned char *out,
+		const unsigned char *in, unsigned int inlen)
+	{
+	return CRYPTO_128_wrap_withpad(key, icv, out, in, inlen, (block128_f)AES_encrypt);
+	}
+
+int AES_unwrap_key_withpad(AES_KEY *key, const unsigned char *icv,
+		unsigned char *out,
+		const unsigned char *in, unsigned int inlen)
+	{
+	return CRYPTO_128_unwrap_withpad(key, icv, out,	in, inlen, (block128_f)AES_decrypt);
+	}
