@@ -62,6 +62,17 @@ static const unsigned char default_iv[] = {
  */
 #define CRYPTO128_WRAP_MAX (1UL << 31)
 
+/** Wrapping according to RFC 3394 section 2.2.1.
+ *
+ *  @param[in]  iv  IV value. Length = 8 bytes. NULL = use default_iv.
+ *  @param[in]  in  Plain text as n 64-bit blocks.
+ *  @param[out] out Cipher text. Minimal buffer length = (inlen + 8) bytes.
+ *                  Input and output buffers can overlap if block function
+ *                  supports that.
+ *  @return         0 if inlen does not consist of n 64-bit blocks, n > 0
+ *                  or if inlen > CRYPTO128_WRAP_MAX.
+ *                  Output length if wrapping succeeded.
+ */
 size_t CRYPTO_128_wrap(void *key, const unsigned char *iv,
 		unsigned char *out,
 		const unsigned char *in, size_t inlen, block128_f block)
@@ -99,9 +110,22 @@ size_t CRYPTO_128_wrap(void *key, const unsigned char *iv,
 	return inlen + 8;
 	}
 
-size_t CRYPTO_128_unwrap(void *key, const unsigned char *iv,
-		unsigned char *out,
-		const unsigned char *in, size_t inlen, block128_f block)
+
+/** Unwrapping according to RFC 3394 section 2.2.2 steps 1-2.
+ *  IV check (step 3) is responsibility of the caller.
+ *
+ *  @param[out] iv  Unchecked IV value. Minimal buffer length = 8 bytes.
+ *  @param[out] out Plain text without IV.
+ *                  Minimal buffer length = (inlen - 8) bytes.
+ *                  Input and output buffers can overlap if block function
+ *                  supports that.
+ *  @return         0 if inlen is out of range [16, CRYPTO128_WRAP_MAX]
+ *                  or if inlen is not multiply of 8.
+ *                  Output length otherwise.
+ */
+static size_t _CRYPTO_128_unwrap_raw(void *key, unsigned char *iv,
+		unsigned char *out, const unsigned char *in,
+		size_t inlen, block128_f block)
 	{
 	unsigned char *A, B[16], *R;
 	size_t i, j, t;
@@ -129,9 +153,38 @@ size_t CRYPTO_128_unwrap(void *key, const unsigned char *iv,
 			memcpy(R, B + 8, 8);
 			}
 		}
+	memcpy(iv, A, 8);
+	return inlen;
+	}
+
+/** Unwrapping according to RFC 3394 section 2.2.2 including IV check.
+ *  First block of plain text have to match supplied IV otherwise an error is
+ *  returned.
+ *
+ *  @param[in]  iv  Expected IV value. Length = 8 bytes. NULL = use default_iv.
+ *  @param[out] out Plain text without IV.
+ *                  Minimal buffer length = (inlen - 8) bytes.
+ *                  Input and output buffers can overlap if block function
+ *                  supports that.
+ *  @return         0 if inlen is out of range [16, CRYPTO128_WRAP_MAX]
+ *                  or if inlen is not multiply of 8
+ *                  or if IV doesn't match expected value.
+ *                  Output length if unwrapping succeeded and IV matches.
+ */
+size_t CRYPTO_128_unwrap(void *key, const unsigned char *iv,
+		unsigned char *out, const unsigned char *in, size_t inlen,
+		block128_f block)
+	{
+	int ret;
+	unsigned char got_iv[8];
+
+	ret = _CRYPTO_128_unwrap_raw(key, got_iv, out, in, inlen, block);
+	if (ret != inlen)
+		return ret;
+
 	if (!iv)
 		iv = default_iv;
-	if (memcmp(A, iv, 8))
+	if (memcmp(out, iv, 8))
 		{
 		OPENSSL_cleanse(out, inlen);
 		return 0;
