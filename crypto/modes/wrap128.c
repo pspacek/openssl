@@ -192,7 +192,7 @@ size_t CRYPTO_128_unwrap(void *key, const unsigned char *iv,
 		unsigned char *out, const unsigned char *in, size_t inlen,
 		block128_f block)
 	{
-	int ret;
+	size_t ret;
 	unsigned char got_iv[8];
 
 	ret = _CRYPTO_128_unwrap_raw(key, got_iv, out, in, inlen, block);
@@ -288,7 +288,7 @@ int CRYPTO_128_unwrap_withpad(void *key, const unsigned char *icv,
 	/* RFC 5649 section 3: Alternative Initial Value */
 	unsigned char aiv[8];
 	unsigned char zeros[8] = {0x0};
-	int ret;
+	size_t ret;
 
 	/* Section 4.2: Cipher text length has to be (n+1) 64-bit blocks. */
 	if ((inlen & 0x7) != 0 || inlen < 16 || inlen >= CRYPTO128_WRAP_MAX)
